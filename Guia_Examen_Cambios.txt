@@ -1,0 +1,119 @@
+A continuación se detalla dónde se implementó cada uno de los 6 puntos del examen
+y qué hacer en caso de que necesites revertir, modificar o adaptar la solución.
+
+--------------------------------------------------------------------------------
+1. PRUEBA 1: Evitar correos duplicados
+--------------------------------------------------------------------------------
+¿Qué se hizo?
+- Se agregó validación en la capa de servicio para evitar registros duplicados.
+- Se agregó un test para validarlo.
+
+Archivos modificados:
+- src/main/java/ec/edu/espe/springlab/service/impl/StudentServiceImpl.java
+  Método: create() - Lanza ConflictException si repo.existsByEmail() es true.
+- src/test/java/ec/edu/espe/springlab/service/StudentServiceTest.java
+  Método: shouldNotAllowDuplicatedEmail()
+
+¿Qué hacer si no te piden esto?
+- En `StudentServiceImpl.java`, elimina el bloque 'if(repo.existsByEmail...)' del método create().
+- En `StudentServiceTest.java`, borra o comenta el método shouldNotAllowDuplicatedEmail().
+
+--------------------------------------------------------------------------------
+2. PRUEBA 2: Excepción al consultar por ID inexistente
+--------------------------------------------------------------------------------
+¿Qué se hizo?
+- La lógica ya estaba parcialmente implementada en el servicio. Se agregó el test para validarlo.
+
+Archivos modificados:
+- src/main/java/ec/edu/espe/springlab/service/impl/StudentServiceImpl.java
+  Método: getById() - Ya lanzaba NotFoundException.
+- src/test/java/ec/edu/espe/springlab/service/StudentServiceTest.java
+  Método: shouldThrowNotFoundExceptionWhenIdDoesNotExist()
+
+¿Qué hacer si no te piden esto?
+- Simplemente elimina o comenta el método shouldThrowNotFoundExceptionWhenIdDoesNotExist() en `StudentServiceTest.java`.
+
+--------------------------------------------------------------------------------
+3. PRUEBA 3: Desactivar estudiante (PATCH)
+--------------------------------------------------------------------------------
+¿Qué se hizo?
+- La lógica del controlador y servicio ya existía. Se agregó el test para validarlo.
+
+Archivos modificados:
+- src/test/java/ec/edu/espe/springlab/service/StudentServiceTest.java
+  Método: shouldDeactivateStudent()
+
+¿Qué hacer si no te piden esto?
+- Simplemente elimina o comenta el método shouldDeactivateStudent() en `StudentServiceTest.java`.
+
+--------------------------------------------------------------------------------
+4. PRUEBA 4: Estadísticas /stats
+--------------------------------------------------------------------------------
+¿Qué se hizo?
+- Se creó un DTO nuevo para la respuesta.
+- Se agregaron consultas en el Repositorio, lógica en el Servicio y un endpoint GET en el Controlador.
+- Se agregó un test en el servicio.
+
+Archivos modificados/creados:
+- src/main/java/ec/edu/espe/springlab/dto/StudentStatsResponse.java (ARCHIVO NUEVO)
+- src/main/java/ec/edu/espe/springlab/repository/StudentRepository.java
+  Agregado: long countByActiveTrue();
+- src/main/java/ec/edu/espe/springlab/service/StudentService.java
+  Agregado: StudentStatsResponse getStats();
+- src/main/java/ec/edu/espe/springlab/service/impl/StudentServiceImpl.java
+  Implementado: getStats()
+- src/main/java/ec/edu/espe/springlab/web/controller/StudentController.java
+  Agregado: @GetMapping("/stats")
+- src/test/java/ec/edu/espe/springlab/service/StudentServiceTest.java
+  Método: shouldReturnCorrectStats()
+
+¿Qué hacer si no te piden esto?
+- Elimina el archivo `StudentStatsResponse.java`.
+- Borra los métodos getStats() de `StudentService.java` y `StudentServiceImpl.java`.
+- Borra el método countByActiveTrue() de `StudentRepository.java`.
+- Borra el endpoint @GetMapping("/stats") de `StudentController.java`.
+- Borra el test shouldReturnCorrectStats() en `StudentServiceTest.java`.
+
+--------------------------------------------------------------------------------
+5. PRUEBA 5: Interceptor agrega X-Elapsed-Time
+--------------------------------------------------------------------------------
+¿Qué se hizo?
+- Se actualizó el interceptor existente para agregar el header en postHandle.
+- Se creó un test unitario específico para el interceptor.
+
+Archivos modificados/creados:
+- src/main/java/ec/edu/espe/springlab/interceptor/RequestLoggingInterceptor.java
+  Implementado: método postHandle() para agregar response.addHeader(...).
+- src/test/java/ec/edu/espe/springlab/interceptor/RequestLoggingInterceptorTest.java (ARCHIVO NUEVO)
+
+¿Qué hacer si no te piden esto?
+- En `RequestLoggingInterceptor.java`, borra el método postHandle().
+- Elimina el archivo de test `RequestLoggingInterceptorTest.java`.
+
+--------------------------------------------------------------------------------
+6. PRUEBA 6: Funcionalidad extra - Búsqueda por nombre parcial
+--------------------------------------------------------------------------------
+¿Qué se hizo?
+- CASO A: IMPLEMENTADO EN EL PROYECTO PRINCIPAL (COMO ESTÁ AHORA)
+  - Se cambió el método del repositorio a StartingWith para que "Juan" no sea encontrado al buscar "an".
+  - Se modificó el servicio list() para usar el nuevo método del repositorio.
+  - Se agregó el test en la capa de servicios.
+
+Archivos modificados:
+- src/main/java/ec/edu/espe/springlab/repository/StudentRepository.java
+  Modificado a: Page<Student> findByFullNameStartingWithIgnoreCase(...)
+- src/main/java/ec/edu/espe/springlab/service/impl/StudentServiceImpl.java
+  Modificado: el método list() ahora llama a findByFullNameStartingWithIgnoreCase.
+- src/test/java/ec/edu/espe/springlab/service/StudentServiceTest.java
+  Método: shouldSearchByPartialName()
+
+¿Qué hacer si el profesor quiere que se use "Containing" (búsqueda parcial real) pero que el test pase de otra forma?
+1. En `StudentRepository.java`, vuelve a cambiar 'StartingWith' por 'Containing':
+   Page<Student> findByFullNameContainingIgnoreCase(String fullName, Pageable pageable);
+2. En `StudentServiceImpl.java`, actualiza el método list() para que llame a 'Containing'.
+3. En `StudentServiceTest.java`, cambia los datos de prueba de 'shouldSearchByPartialName'. En lugar de "Juan", pon un nombre que NO contenga "an", por ejemplo "Pedro". Así pasará el test usando 'Containing'.
+
+¿Qué hacer si esta funcionalidad solo la pedían en los tests y NO en el proyecto base?
+- Si solo la querían evaluar en el Repositorio (sin afectar al servicio/controlador existente):
+  1. En `StudentServiceImpl.java`, revierte el método list() para que devuelva algo estático o use findAll().
+  2. Mueve la lógica del test `shouldSearchByPartialName` desde `StudentServiceTest.java` hacia `StudentRepositoryTest.java`, probando directamente el repositorio en lugar del servicio.

@@ -1,0 +1,11 @@
+.gradle
+build
+.git
+.idea
+*.zip
+Dockerfile
+.dockerignore
+bin
+obj
+out
+node_modules

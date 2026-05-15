@@ -1,0 +1,24 @@
+spring:
+    datasource:
+        url: jdbc:mysql://localhost:3306/spring_lab?allowPublicKeyRetrieval=true&useSSL=false
+        username: root
+        password: "1234"
+        driver-class-name: com.mysql.cj.jdbc.Driver
+
+    jpa:
+        hibernate:
+            ddl-auto: update
+        show-sql: true
+        properties:
+            hibernate:
+                format_sql: true
+
+    devtools:
+        restart:
+            enabled: true
+
+server:
+    port: 8085
+
+app:
+    version: ${APP_VERSION:1.0.0}
